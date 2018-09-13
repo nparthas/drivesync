@@ -27,10 +27,10 @@ const (
 
 // RunConfig holds all of the run configurations
 type RunConfig struct {
-	CredentialsFilepath string
-	ParentFolder        string
-	DriveFolder         string
-	Once                bool
+	CredentialsPath string
+	ParentFolder    string
+	DriveFolder     string
+	Once            bool
 }
 
 // SetUp configures the run configuration and returns all of the flags needed to run the program
@@ -46,14 +46,8 @@ func SetUp() (*RunConfig, error) {
 		return nil, err
 	}
 
+	// if the user did not create the directory, make it but the program will fail later on
 	os.MkdirAll(configDir, os.ModePerm)
-
-	if config.CredentialsFilepath != path.Join(configDir, TokenFile) {
-		err = copyFile(config.CredentialsFilepath, path.Join(configDir, CredentialsFile))
-		if err != nil {
-			return nil, err
-		}
-	}
 
 	return config, err
 }
@@ -65,9 +59,10 @@ func GetTokenSaveLocation() string {
 }
 
 func getRunConfig(configDir string) (*RunConfig, error) {
-	config := RunConfig{}
+	config := RunConfig{
+		CredentialsPath: path.Join(expandUser(ConfigPath), CredentialsFile),
+	}
 
-	flag.StringVar(&config.CredentialsFilepath, "credentials", path.Join(configDir, CredentialsFile), "filepath to drive credentials, copies the file to the default location")
 	flag.StringVar(&config.ParentFolder, "folder", "", "folder to sync to drive")
 	flag.BoolVar(&config.Once, "once", false, "run the sync only once instead of continuously")
 

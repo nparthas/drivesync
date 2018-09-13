@@ -1,5 +1,4 @@
 IMAGE := $(shell basename `pwd`)
-DIRECTORY := $(shell readlink -f ~/Documents/university)
 CONFIG_FOLDER := $(shell readlink -f ~/.drivesync)
 RUNARGS := --name $(IMAGE) -v $(DIRECTORY):$(DIRECTORY) -v $(CONFIG_FOLDER):/root/.drivesync
 
@@ -33,8 +32,8 @@ build-alpine:
 run: $(IMAGE) fast-run
 
 .PHONY: fast-run
-fast-run:
-	docker run $(RUNARGS) $(IMAGE) -folder $(DIRECTORY)
+fast-run: rm
+	docker run $(RUNARGS) $(IMAGE) --folder $(DIRECTORY)
 
 .PHONY: sh
 sh: $(IMAGE) fast-sh
@@ -46,7 +45,7 @@ fast-sh:
 
 .PHONY: rm
 rm:
-	docker rm $(IMAGE) --force
+	-$(shell docker rm $(IMAGE) --force)
 
 .PHONY: all
 all: deps build $(IMAGE)

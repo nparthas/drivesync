@@ -106,7 +106,7 @@ func (srv DriveService) DownloadFile(fileID string, dest string) error {
 	r, err := srv.service.Files.Get(fileID).AcknowledgeAbuse(true).Download()
 	if err != nil {
 		if strings.Contains(err.Error(), "invalidAbuseAcknowledgment") {
-			// there is a case where drive will thow an error for no reason, this api call is suppoed to be fixed
+			// there is a case where drive will throw an error for no reason, this api call is suppoed to be fixed
 			// but sometimes gives awn invalidAbuseAcknowledgment when that error shouldn't be used anymore
 			r, err = srv.service.Files.Get(fileID).Download()
 		}

@@ -15,7 +15,7 @@ func main() {
 
 	// TODO:: error handle for outdated token
 
-	srv, err := sync.GetService(config.CredentialsFilepath)
+	srv, err := sync.GetService(config.CredentialsPath)
 	if err != nil {
 		log.Fatalf("Unable to retrieve drive client %v", err)
 	}

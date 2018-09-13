@@ -1,52 +1,42 @@
 package main
 
 import (
-	"fmt"
-	"io/ioutil"
 	"log"
 
 	"github.com/nparthas/drivesync/sync"
-
-	"golang.org/x/oauth2/google"
-	"google.golang.org/api/drive/v3"
 )
 
 func main() {
 
-	b, err := ioutil.ReadFile("credentials.json")
-
+	config, err := sync.SetUp()
 	if err != nil {
-		log.Fatalf("Unable to read credentails file %v", err)
+		log.Fatalf("The directory to upload must be set from the command line")
 	}
 
-	config, err := google.ConfigFromJSON(b, drive.DriveMetadataReadonlyScope)
-	if err != nil {
-		log.Fatalf("Unable to parse client secret file %v", err)
-	}
+	// TODO:: error handle for outdated token
 
-	client := sync.GetClient(config)
-
-	srv, err := drive.New(client)
+	srv, err := sync.GetService(config.CredentialsFilepath)
 	if err != nil {
 		log.Fatalf("Unable to retrieve drive client %v", err)
 	}
 
-	// r, err := srv.Files.List().PageSize(10).Fields("nextPageToken, files(id, name)").Do()
-	r, err := srv.Files.List().PageSize(50).Fields("nextPageToken, files(id,name)").Q("mimeType = 'application/vnd.google-apps.folder'").Do()
-	// r := srv.Files.EmptyTrash()
-
+	// get the parent folder id
+	parentID, err := srv.GetFolderID(config.DriveFolder)
 	if err != nil {
-		log.Fatalf("Unable to get list of file %v", err)
+		log.Fatalf("Unable to get list of files %v", err)
 	}
+	log.Printf("top-level parent folder name, id: %s %s\n", config.DriveFolder, parentID)
 
-	fmt.Printf("\n\n%v\n\n\n", r)
+	ch := make(chan error)
 
-	fmt.Println("Files")
-	if len(r.Files) == 0 {
-		fmt.Println("no files")
-	} else {
-		for _, i := range r.Files {
-			fmt.Printf("%s (%s)\n", i.Name, i.Id)
+	for ok := true; ok; ok = config.Once {
+		go sync.DoRecursiveSync(srv, config.ParentFolder, parentID, ch)
+		// only errors get sent back, fail on the first one
+		err = <-ch
+		if err != nil {
+			log.Fatalf("Could not sync dir %v", err)
 		}
+		// put some newline so it's easier to read the log file
+		log.Printf("finished sync...\n\n\n\n\n\n\n")
 	}
 }

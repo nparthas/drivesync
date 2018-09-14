@@ -1,6 +1,6 @@
 IMAGE := $(shell basename `pwd`)
 CONFIG_FOLDER := $(shell readlink -f ~/.drivesync)
-RUNARGS := --name $(IMAGE) -d -v $(DIRECTORY):$(DIRECTORY) -v $(CONFIG_FOLDER):/root/.drivesync
+RUNARGS := --name $(IMAGE) -v $(DIRECTORY):$(DIRECTORY) -v $(CONFIG_FOLDER):/home/drivesync/.drivesync
 
 .PHONY: run fast-run $(IMAGE) build
 
@@ -33,7 +33,7 @@ run: $(IMAGE) fast-run
 
 .PHONY: fast-run
 fast-run: rm
-	docker run $(RUNARGS) $(IMAGE) --folder $(DIRECTORY)
+	docker run -d $(RUNARGS) $(IMAGE) --folder $(DIRECTORY)
 
 .PHONY: sh
 sh: $(IMAGE) fast-sh

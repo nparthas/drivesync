@@ -51,7 +51,15 @@ func sync(srv *DriveService, parentDir string, parentID string, ch chan<- error)
 		return
 	}
 
-	// TODO:: create a channel to handle errors and leverage goroutines
+	// get all the folders again in case we created some more
+	items, err = srv.GetItemsForFolder(parentID)
+	if err != nil {
+		log.Printf("%v", err)
+		ch <- err
+		return
+	}
+	_, driveFolders = SeparateFilesAndFolders(items)
+
 	for _, folder := range driveFolders {
 		sync(srv, path.Join(parentDir, folder.Name), folder.Id, ch)
 	}
@@ -160,9 +168,8 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 				}
 			} else if !driveFile.Capabilities.CanDownload {
 				log.Printf("%s cannot be downloaded, skipping...", name)
-			} else {
-				log.Printf("%s has same hashes in drive and locally, skipping...", name)
 			}
+			// going to not log files that are the same, muddles logfile
 
 			processedFiles[name] = true
 		}

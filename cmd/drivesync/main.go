@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"time"
 
 	"github.com/nparthas/drivesync/sync"
 )
@@ -38,5 +39,7 @@ func main() {
 		}
 		// put some newline so it's easier to read the log file
 		log.Printf("finished sync...\n\n\n\n\n\n\n")
+
+		time.Sleep(time.Hour)
 	}
 }

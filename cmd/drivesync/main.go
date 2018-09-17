@@ -30,7 +30,7 @@ func main() {
 
 	ch := make(chan error)
 
-	for ok := true; ok; ok = config.Once {
+	for ok := true; ok; ok = !config.Once {
 		go sync.DoRecursiveSync(srv, config.ParentFolder, parentID, ch)
 		// only errors get sent back, fail on the first one
 		err = <-ch

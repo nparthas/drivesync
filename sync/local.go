@@ -1,6 +1,8 @@
 package sync
 
-import "os"
+import (
+	"os"
+)
 
 // GetTopLevelFiles returns the file information at the top level of the directory, similar to ioutil.ReadDir but does not sort
 // since we don't need that
@@ -13,7 +15,7 @@ func GetTopLevelFiles(dirName string) ([]os.FileInfo, error) {
 
 	files := items[:0]
 	for _, item := range items {
-		if !item.IsDir() {
+		if !item.IsDir() && item.Mode()&os.ModeSymlink == 0 {
 			files = append(files, item)
 		}
 	}
@@ -31,7 +33,9 @@ func GetTopLevelFolders(dirName string) ([]os.FileInfo, error) {
 
 	dirs := items[:0]
 	for _, item := range items {
-		if item.IsDir() {
+		if item.IsDir() && item.Mode()&os.ModeSymlink == 0 {
+			// in the future we need to evaluate the symlinks using
+			// filepath.EvalSymlinks()
 			dirs = append(dirs, item)
 		}
 	}

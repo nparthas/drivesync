@@ -71,6 +71,7 @@ func syncFolders(srv *DriveService, parentDir string, parentID string, driveFold
 
 	localFolders, err := GetTopLevelFolders(parentDir)
 	if err != nil {
+		log.Printf("error: %v", err)
 		return err
 	}
 
@@ -83,6 +84,7 @@ func syncFolders(srv *DriveService, parentDir string, parentID string, driveFold
 			err = srv.CreateFolder(name, parentID)
 			log.Printf("Creating folder %s in drive\n", name)
 			if err != nil {
+				log.Printf("error: %v", err)
 				return err
 			}
 		} else {
@@ -106,6 +108,7 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 
 	localFiles, err := GetTopLevelFiles(parentDir)
 	if err != nil {
+		log.Printf("error: %v", err)
 		return err
 	}
 
@@ -124,10 +127,12 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 			log.Printf("Uploading %s file to drive\n", name)
 			r, err := os.Open(path.Join(parentDir, name))
 			if err != nil {
+				log.Printf("error: %v", err)
 				return err
 			}
 			err = srv.UploadFile(r, name, folderID)
 			if err != nil {
+				log.Printf("error: %v", err)
 				return err
 			}
 		} else {
@@ -135,6 +140,7 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 			driveFile := driveFiles[name]
 			localMD5, err := computeHashString(path.Join(parentDir, name))
 			if err != nil {
+				log.Printf("error: %v", err)
 				return err
 			}
 
@@ -145,6 +151,7 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 				localTime := file.ModTime().UTC().Round(time.Second)
 				driveTime, err := time.Parse(TimeFormat, driveFile.ModifiedTime)
 				if err != nil {
+					log.Printf("error: %v", err)
 					return err
 				}
 				driveTime.Round(time.Second)
@@ -154,6 +161,7 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 					log.Printf("%s is newer in drive, dowloading...", name)
 					err = srv.DownloadFile(driveFile.Id, path.Join(parentDir, name))
 					if err != nil {
+						log.Printf("error: %v", err)
 						return err
 					}
 				} else {
@@ -161,10 +169,15 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 					log.Printf("%s is newer locally, uploading...", name)
 					f, err := os.Open(path.Join(parentDir, name))
 					if err != nil {
+						log.Printf("error: %v", err)
 						return err
 					}
 					defer f.Close()
 					err = srv.UpdateFile(f, driveFile.Id)
+					if err != nil {
+						log.Printf("error: %v", err)
+						return err
+					}
 				}
 			} else if !driveFile.Capabilities.CanDownload {
 				log.Printf("%s cannot be downloaded, skipping...", name)
@@ -183,6 +196,7 @@ func syncFiles(srv *DriveService, parentDir string, folderID string, driveFiles 
 			log.Printf("Downloading %s from drive\n", name)
 			err = srv.DownloadFile(file.Id, path.Join(parentDir, name))
 			if err != nil {
+				log.Printf("error: %v", err)
 				return err
 			}
 		}
@@ -197,6 +211,7 @@ func computeHashString(filePath string) (string, error) {
 	// compute the hash for the local file to compare
 	f, err := os.Open(filePath)
 	if err != nil {
+		log.Printf("error: %v", err)
 		return "", err
 	}
 	defer f.Close()
@@ -204,6 +219,7 @@ func computeHashString(filePath string) (string, error) {
 	h := md5.New()
 	_, err = io.Copy(h, f)
 	if err != nil {
+		log.Printf("error: %v", err)
 		return "", err
 	}
 	s := fmt.Sprintf("%x", h.Sum(nil))
